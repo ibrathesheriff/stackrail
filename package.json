@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/ibrathesheriff/stackrail#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
     "chalk": "^5.4.1",
     "chalk-animation": "^2.0.3",
     "figlet": "^1.8.1",
