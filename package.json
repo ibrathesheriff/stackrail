@@ -1,0 +1,34 @@
+{
+  "name": "stackrail",
+  "version": "1.0.0",
+  "description": "StackRail is a command-line interface (CLI) tool designed to help you efficiently manage and track your coding projects. Inspired by the principles of stack-based organization, MoSCoW prioritization, RICE scoring model and guided progress, StackRail helps you maintain clarity and momentum, especially when picking up projects after a break.",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "stackrail": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "stackrail": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ibrathesheriff/stackrail.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ibrathesheriff/stackrail/issues"
+  },
+  "homepage": "https://github.com/ibrathesheriff/stackrail#readme",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "chalk-animation": "^2.0.3",
+    "figlet": "^1.8.1",
+    "gradient-string": "^3.0.0",
+    "inquirer": "^12.6.3",
+    "nanospinner": "^1.2.2"
+  }
+}
