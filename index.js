@@ -11,7 +11,7 @@ import { hideBin } from 'yargs/helpers';
 import { STACKRAIL_VERSION } from './config.js'
 // import handlers
 import { handlePop, handlePush, handleProject, handleAdd, handleTask, handleList } from './handlers.js';
-import { stackRailJoin, stackRailLogin, stackRailLogout } from './auth.js';
+import { stackRailJoin, stackRailVerification, stackRailLogin, stackRailLogout } from './auth.js';
 
 // Create yargs instance
 const argv = yargs(hideBin(process.argv))
@@ -48,7 +48,7 @@ const argv = yargs(hideBin(process.argv))
     // 'join' command
     .command(
         'join',
-        'Signs you up for a stackrail account',
+        'Signs you up for a StackRail account',
         (yargs) => {
             return yargs;
         },
@@ -57,10 +57,22 @@ const argv = yargs(hideBin(process.argv))
         }
     )
 
+    // 'verify' command
+    .command(
+        'verify',
+        'Verify your StackRail account',
+        (yargs) => {
+            return yargs;
+        },
+        async (argv) => {
+            await stackRailVerification();
+        }
+    )
+
     // 'login' command
     .command(
         'login',
-        'Logs into your stackrail account',
+        'Logs into your StackRail account',
         (yargs) => {
             return yargs;
         },
@@ -72,7 +84,7 @@ const argv = yargs(hideBin(process.argv))
     // 'logout' command
     .command(
         'logout',
-        'Logs out of your stackrail account',
+        'Logs out of your StackRail account',
         (yargs) => {
             // No specific options needed for logout, usually.
             return yargs;
@@ -85,7 +97,7 @@ const argv = yargs(hideBin(process.argv))
     // 'project' command
     .command(
         'project',
-        'Manage your stackrail projects',
+        'Manage your StackRail projects',
         (yargs) => {
             return yargs
                 .option('new', {
