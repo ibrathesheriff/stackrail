@@ -22,3 +22,4 @@ export const SESSION_FILE_DIR = join(process.env.HOME || process.env.USERPROFILE
 export const SESSION_FILE_PATH = join(SESSION_FILE_DIR, '.session.json');
 export const PROFILE_FILE_PATH = join(SESSION_FILE_DIR, '.profile.json');
 export const PROJECT_FILE_PATH = join(SESSION_FILE_DIR, '.project.json');
+export const DEFAULT_TAGS = ['design', 'ux', 'feature', 'bug', 'refactor', 'documentation', 'testing', 'frontend', 'backend', 'deployment', 'data/database', 'security', 'logging', 'monitoring', 'ci/cd', 'admin', 'compliance', 'biz-dev']

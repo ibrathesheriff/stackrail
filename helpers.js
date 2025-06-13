@@ -33,7 +33,11 @@ export async function displaySuccessMessage(message) {
     console.log(chalk.green(message));
 }
 
-export async function displayTable(headings, dataRows) {
+export async function displayTable(headings, dataRows, recordName) {
+    if (dataRows.length === 0) {
+        console.log(chalk.gray(`No '${recordName}' to display.`))
+        return;
+    }
     for (let i = 0; i < headings.length; i++) {
         headings[i] = chalk.cyan(headings[i]);
     }
@@ -72,6 +76,10 @@ export function isStringOnlyDigits(str) {
         return false;
     }
     return /^\d+$/.test(str); // ^ start, \d digit, + one or more, $ end
+}
+
+export function normalizeTag(tag) {
+    return tag.trim().toLowerCase();
 }
 
 export async function createDirectory(directoryPath) {

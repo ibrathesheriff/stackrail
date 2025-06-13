@@ -4,7 +4,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { STACKRAIL_VERSION } from './config.js'
 // import handlers
-import { handlePop, handlePush, handleProject, handleAdd, handleTask, handleList } from './handlers.js';
+import { handlePop, handlePush, handleProject, handleRail, handleAdd, handleTask, handleList } from './handlers.js';
 import { stackRailJoin, stackRailVerification, stackRailLogin, stackRailLogout } from './auth.js';
 
 // Create yargs instance
@@ -115,6 +115,23 @@ const argv = yargs(hideBin(process.argv))
         async (argv) => {
             // Handler for the 'project' command based on the chosen action
             await handleProject(argv);
+        }
+    )
+
+    .command(
+        'rail <title>', // Defines 'rail' command with a required positional 'title' argument
+        'Adds a task to Rail (temporary store of partially described tasks)',
+        (yargs) => {
+            return yargs
+                .positional('title', {
+                    describe: "The title of the new 'rail' task",
+                    type: 'string', // Ensure it's treated as a string
+                    demandOption: true, // Make the title mandatory
+                })
+                .example('stackrail rail "Refactor old API code"', 'Creates a new rail task with the given title.');
+        },
+        async (argv) => {
+            await handleRail(argv.title);
         }
     )
 
