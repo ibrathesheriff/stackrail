@@ -4,6 +4,7 @@ import * as fs from 'node:fs/promises';
 import chalk from 'chalk'
 import chalkAnimation from 'chalk-animation'
 import figlet from 'figlet'
+import Table from 'cli-table3'
 
 export async function displayCommandHeader(processMessage, actionPrompt) {
     console.log(chalk.cyan(processMessage));
@@ -32,6 +33,46 @@ export async function displaySuccessMessage(message) {
     console.log(chalk.green(message));
 }
 
+export async function displayTable(headings, dataRows) {
+    for (let i = 0; i < headings.length; i++) {
+        headings[i] = chalk.cyan(headings[i]);
+    }
+    let table = new Table({
+        head: headings,
+        chars: {
+            'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗'
+            , 'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚', 'bottom-right': '╝'
+            , 'left': '║', 'left-mid': '╟', 'mid': '─', 'mid-mid': '┼'
+            , 'right': '║', 'right-mid': '╢', 'middle': '│'
+        },
+        style: {
+            'padding-left': 1,
+            'padding-right': 1,
+            head: ['cyan'],
+            border: ['gray'],
+        }
+    });
+
+    for (let i = 0; i < dataRows.length; i++) {
+        table.push(dataRows[i]);
+    }
+
+    console.log(table.toString());
+}
+
+export function shortenText(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength) + "...";
+}
+
+export function isStringOnlyDigits(str) {
+    if (typeof str !== 'string') {
+        return false;
+    }
+    return /^\d+$/.test(str); // ^ start, \d digit, + one or more, $ end
+}
 
 export async function createDirectory(directoryPath) {
     try {

@@ -1,3 +1,15 @@
+import { supabase, SESSION_FILE_DIR, PROJECT_FILE_PATH } from './config.js'
+import { authenticateSession } from './auth.js';
+import { displayCommandHeader, displaySuccessMessage, displayTable, directoryExists, createDirectory, fileExists, shortenText, isStringOnlyDigits } from './helpers.js'
+import * as db from './db.js';
+import * as fs from 'node:fs/promises';
+
+import chalk from 'chalk'
+import inquirer from 'inquirer'
+import { createSpinner } from 'nanospinner'
+
+const projectNicknameRegex = /^[a-zA-Z0-9]+$/;
+
 export async function handlePop() {
     console.log('Handler: Start working on the highest priority task');
 }
@@ -6,21 +18,157 @@ export async function handlePush() {
     console.log('Handler: Add a new highest priority task');
 }
 
+async function getProjectDetails() {
+    const questions = [
+        {
+            type: 'input',
+            name: 'projectName',
+            message: 'Enter the project name:',
+            validate: (input) => {
+                if (input.length >= 1) {
+                    return true;
+                }
+                return 'Please enter a valid name for the project.';
+            },
+        },
+        {
+            type: 'input',
+            name: 'problem',
+            message: 'Which problem is the project tackling?',
+            validate: (input) => {
+                if (input.length >= 1) {
+                    return true;
+                }
+                return 'Please enter the problem the project is looking to solve.';
+            },
+        },
+        {
+            type: 'input',
+            name: 'description',
+            message: 'Enter a description for the project:',
+            validate: (input) => {
+                if (input.length >= 1) {
+                    return true;
+                }
+                return 'Please enter a valid description for the project.';
+            },
+        },
+        {
+            type: 'input',
+            name: 'nickname',
+            message: 'Enter a nickname for the project:',
+            validate: (input) => {
+                if (input.length >= 1 && projectNicknameRegex.test(input)) {
+                    return true;
+                }
+                return 'Please enter a valid nickname for the project.';
+            },
+        },
+
+    ];
+
+    try {
+        const answers = await inquirer.prompt(questions);
+        return answers; // Returns { email: 'user@example.com', password: 'mysecretpassword' }
+    } catch (error) {
+        if (error.isTtyError) {
+            // Prompt couldn't be rendered in the current environment
+            console.error(chalk.red('Error: Prompt not supported in this environment.'));
+        } else {
+            // Other errors
+            console.error(chalk.red('Error getting input:'), error.message);
+        }
+        process.exit(1); // Exit the CLI if input cannot be obtained
+    }
+}
+
+async function createProject() {
+    displayCommandHeader('Create a New Project', null)
+    const sessionDirectoryFound = await directoryExists(SESSION_FILE_DIR);
+    if (!sessionDirectoryFound) {
+        await createDirectory(SESSION_FILE_DIR);
+    }
+
+    const projectInfo = await getProjectDetails();
+
+    const result = await db.insertProject(supabase, projectInfo.projectName, projectInfo.problem, projectInfo.description, projectInfo.nickname);
+
+    const projectData = {
+        id: result[0].id,
+        projectName: projectInfo.projectName,
+        problem: projectInfo.problem,
+        description: projectInfo.description,
+        nickname: projectInfo.nickname,
+    };
+
+    await fs.writeFile(PROJECT_FILE_PATH, JSON.stringify(projectData, null, 2));
+
+    await displaySuccessMessage(`\n'${projectInfo.projectName}' was successfully created`);
+
+    console.log(chalk.gray(`\nYou have been switch to the '${projectInfo.projectName}' project...`))
+}
+
 export async function handleProject(argv) {
+    const authenticated = await authenticateSession(supabase);
+    if (!authenticated) {
+        return;
+    }
     if (argv.new) {
-        console.log('Handler: Creating a new project...');
-        // await createNewProject();
+        await createProject();
     } else if (argv.list) {
-        console.log('Handler: Listing all stackrail projects...');
-        // await listProjects();
+        const spinner = createSpinner('Loading your projects...').start();
+        // list all the Dev's projects
+        const projectRecords = await db.selectProjects(supabase);
+        if (projectRecords === null) {
+            spinner.error({ text: chalk.red("Failed to retrieve your projects") });
+            return;
+        }
+        const projects = [];
+        projectRecords.forEach(project => {
+            projects.push([
+                project.id,
+                new Date(project.created_at).toLocaleDateString(),
+                project.project_name,
+                project.nickname,
+                shortenText(project.problem, 75)
+            ]);
+        });
+        spinner.success({ text: chalk.gray("Your Projects:\n") });
+        displayTable(['ID', 'Created', 'Name', 'Nickname', 'Problem'], projects);
     } else if (argv.switch) {
+        const spinner = createSpinner('Searching for the project...').start();
         const projectId = argv.switch;
-        console.log(`Handler: Switching to project with ID: ${projectId}`);
-        // await switchProject(projectId);
+        let column = null;
+        if (isStringOnlyDigits(projectId)) {
+            // query using the project ID column
+            column = 'id';
+        } else {
+            // query by nickname
+            column = 'nickname';
+        }
+        const result = await db.selectProjectBy(supabase, column, projectId);
+        if (result === null) {
+            spinner.error({ text: chalk.red(`Failed to retrieve the project with the ${column} '${projectId}'`) });
+            return;
+        } else if (result.length === 0) {
+            spinner.error({ text: chalk.red(`No such project exists ${column}='${projectId}'`) });
+            return;
+        }
+        spinner.success({ text: chalk.green(`Your workspace has been switch to the project '${result[0].project_name}'`) });
     } else {
-        // --- DEFAULT ACTION FOR `stackrail project` ---
-        console.log('Handler: Displaying current project information...');
-        // await getCurrentProjectInfo(); // Or await listProjects(); or show project-specific help
+        // display the information of the current project the Dev is working on
+        const projectFileExists = await fileExists(PROJECT_FILE_PATH);
+        if (!projectFileExists) {
+            console.log(chalk.red("You are not currently working on a problem. Either create a project or switch to a project"));
+            return;
+        }
+        const projectFileData = await fs.readFile(PROJECT_FILE_PATH, 'utf8');
+        const projectData = JSON.parse(projectFileData);
+        console.log(chalk.gray("Current project:\n"));
+        console.log("Project name:", chalk.cyan(projectData.projectName));
+        console.log("Problem:", chalk.cyan(projectData.problem));
+        console.log("Description:", chalk.cyan(projectData.description));
+        console.log("Nickname:", chalk.cyan(projectData.nickname));
     }
 }
 
