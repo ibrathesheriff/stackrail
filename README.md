@@ -22,6 +22,10 @@ TBC
 [] Cannot run verify if there is no `.profile` file.
 [] Add a changelog
 [] Updating of tasks
+[] Add docs folder:
+    - project logo
+    - command manual
+    - resources used
 
 ## Future Work
 [] Check if a new task is a duplicate of an existing "open" (i.e. not complete) task
